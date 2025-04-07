@@ -11,10 +11,8 @@ class Media:
     Base class to represent a general piece of media.
     Demonstrates inheritance: Movie will inherit from Media.
     """
-
     def __init__(self, title: str, year: int):
-        # We use the property setters so we enforce 'not empty' for title, 
-        # but no range constraints on year.
+        # Enforce non-empty title using property setter; no range constraints on year.
         self.title = title
         self.year = year
 
@@ -34,7 +32,6 @@ class Media:
 
     @year.setter
     def year(self, value):
-        # No range checks; just store the integer.
         self.__year = value
 
 
@@ -43,7 +40,6 @@ class Movie(Media):
     A specialized Media that includes genre, rating, and watched status.
     Demonstrates encapsulation via private attributes and getters/setters.
     """
-
     def __init__(self, title: str, year: int, genre: str, watched=False, rating=None):
         super().__init__(title, year)
         self.__genre = genre
@@ -85,11 +81,8 @@ class MovieLibrary:
     Holds multiple Movie objects (composition).
     Also demonstrates using multiple lists, a while loop, and for loops.
     """
-
     def __init__(self):
-        # Main list of movies
         self.__movies = []
-        # Additional list: let's track unwatched movies separately
         self.__unwatched_movies = []
 
     def add_movie(self, movie: Movie):
@@ -106,7 +99,7 @@ class MovieLibrary:
         ]
         after_count = len(self.__movies)
         self.__build_unwatched_list()
-        return before_count - after_count  # number of deleted items
+        return before_count - after_count
 
     def get_all_movies(self):
         """Return a list of all Movie objects."""
@@ -117,14 +110,10 @@ class MovieLibrary:
         return self.__unwatched_movies
 
     def __build_unwatched_list(self):
-        """Rebuilds the self.__unwatched_movies list from self.__movies."""
         self.__unwatched_movies = [m for m in self.__movies if not m.watched]
 
     def ensure_valid_ratings(self):
-        """
-        Demonstrates a while loop.
-        If any rating is invalid, set it to None.
-        """
+        """Checks and resets any invalid ratings using a while loop."""
         i = 0
         while i < len(self.__movies):
             movie = self.__movies[i]
@@ -144,7 +133,6 @@ class MovieLibrary:
 
         for _, row in df.iterrows():
             title = row.get("Title", "")
-            # default to 2000 if year is missing or invalid
             year = int(row.get("Year", 2000))
             genre = row.get("Genre", "")
             watched = bool(row.get("Watched", False))
@@ -174,99 +162,109 @@ class MovieLibrary:
         df = pd.DataFrame(data)
         df.to_csv(filename, index=False)
 
+
 # ------------------------------ MOVIELOG APP CLASS ------------------------------
 
 class MovieLogApp(tk.Tk):
     """
-    Main Tkinter application. Inherits from tk.Tk (demonstrating inheritance).
-    Encapsulates the UI logic. Composes a MovieLibrary instance.
+    Main Tkinter application. Inherits from tk.Tk.
+    Encapsulates the UI logic and composes a MovieLibrary instance.
     """
-
     def __init__(self, api_key="YOUR_OMDB_API_KEY"):
         super().__init__()
         self.title("MovieLog")
-        self.geometry("800x500")
+        self.geometry("1000x500")  # Wider to accommodate the recommended section
 
-        # The library is composed here
         self.library = MovieLibrary()
-        self.library.load_from_csv("movies.csv")  # Load existing data
-
+        self.library.load_from_csv("movies.csv")
         self.api_key = api_key
 
-        # Set up the UI
         self._setup_ui()
 
     def _setup_ui(self):
-        """Create frames, widgets, and layout (no brand bar)."""
+        """Set up frames, widgets, and layout."""
         self.main_frame = ttk.Frame(self, padding=10)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # row=0: Title + Fetch
-        ttk.Label(self.main_frame, text="Title").grid(row=0, column=0, padx=5, pady=5, sticky="W")
-        self.entry_title = ttk.Entry(self.main_frame, width=30)
+        # Left section (controls and movie list)
+        left_frame = ttk.Frame(self.main_frame)
+        left_frame.grid(row=0, column=0, sticky="nsew")
+
+        # Form Fields
+        ttk.Label(left_frame, text="Title").grid(row=0, column=0, padx=5, pady=5, sticky="W")
+        self.entry_title = ttk.Entry(left_frame, width=30)
         self.entry_title.grid(row=0, column=1, padx=5, pady=5, sticky="W")
 
-        fetch_btn = ttk.Button(self.main_frame, text="Fetch Details", command=self.fetch_movie_details)
+        fetch_btn = ttk.Button(left_frame, text="Fetch Details", command=self.fetch_movie_details)
         fetch_btn.grid(row=0, column=2, padx=5, pady=5)
 
-        # row=1: Year
-        ttk.Label(self.main_frame, text="Year").grid(row=1, column=0, padx=5, pady=5, sticky="W")
-        self.entry_year = ttk.Entry(self.main_frame, width=10)
+        ttk.Label(left_frame, text="Year").grid(row=1, column=0, padx=5, pady=5, sticky="W")
+        self.entry_year = ttk.Entry(left_frame, width=10)
         self.entry_year.grid(row=1, column=1, padx=5, pady=5, sticky="W")
 
-        # row=2: Genre
-        ttk.Label(self.main_frame, text="Genre").grid(row=2, column=0, padx=5, pady=5, sticky="W")
-        self.entry_genre = ttk.Entry(self.main_frame, width=20)
+        ttk.Label(left_frame, text="Genre").grid(row=2, column=0, padx=5, pady=5, sticky="W")
+        self.entry_genre = ttk.Entry(left_frame, width=20)
         self.entry_genre.grid(row=2, column=1, padx=5, pady=5, sticky="W")
 
-        # row=3: Rating
-        ttk.Label(self.main_frame, text="Rating (0-10)").grid(row=3, column=0, padx=5, pady=5, sticky="W")
-        self.entry_rating = ttk.Entry(self.main_frame, width=5)
+        ttk.Label(left_frame, text="Rating (0-10)").grid(row=3, column=0, padx=5, pady=5, sticky="W")
+        self.entry_rating = ttk.Entry(left_frame, width=5)
         self.entry_rating.grid(row=3, column=1, padx=5, pady=5, sticky="W")
 
-        # row=4: Watched
         self.var_watched = tk.BooleanVar()
-        watched_cb = ttk.Checkbutton(self.main_frame, text="Watched", variable=self.var_watched)
+        watched_cb = ttk.Checkbutton(left_frame, text="Watched", variable=self.var_watched)
         watched_cb.grid(row=4, column=1, padx=5, pady=5, sticky="W")
 
-        # row=5: Buttons
-        add_btn = ttk.Button(self.main_frame, text="Add Movie", command=self.add_movie)
+        add_btn = ttk.Button(left_frame, text="Add Movie", command=self.add_movie)
         add_btn.grid(row=5, column=0, padx=5, pady=5)
 
-        delete_btn = ttk.Button(self.main_frame, text="Delete Selected", command=self.delete_selected_movie)
+        delete_btn = ttk.Button(left_frame, text="Delete Selected", command=self.delete_selected_movie)
         delete_btn.grid(row=5, column=1, padx=5, pady=5)
 
-        refresh_btn = ttk.Button(self.main_frame, text="Refresh List", command=self.refresh_list)
+        refresh_btn = ttk.Button(left_frame, text="Refresh List", command=self.refresh_list)
         refresh_btn.grid(row=5, column=2, padx=5, pady=5)
 
-        # row=6: Treeview
+        # Movie list Treeview
         columns = ("Title", "Year", "Genre", "Rating", "Watched")
-        self.tree = ttk.Treeview(self.main_frame, columns=columns, show="headings", height=12)
-        self.tree.heading("Title", text="Title")
-        self.tree.heading("Year", text="Year")
-        self.tree.heading("Genre", text="Genre")
-        self.tree.heading("Rating", text="Rating")
-        self.tree.heading("Watched", text="Watched")
-
+        self.tree = ttk.Treeview(left_frame, columns=columns, show="headings", height=12)
+        for col in columns:
+            self.tree.heading(col, text=col)
         self.tree.column("Title", width=200)
         self.tree.column("Year", width=50, anchor=tk.CENTER)
         self.tree.column("Genre", width=100)
         self.tree.column("Rating", width=60, anchor=tk.CENTER)
         self.tree.column("Watched", width=70, anchor=tk.CENTER)
-
         self.tree.grid(row=6, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
 
-        # Make the table area expandable
-        self.main_frame.rowconfigure(6, weight=1)
+        left_frame.rowconfigure(6, weight=1)
+        left_frame.columnconfigure(1, weight=1)
+
+        # Right section: Recommended Movies
+        self.recommended_frame = ttk.Frame(self.main_frame, padding=10, relief=tk.RIDGE)
+        self.recommended_frame.grid(row=0, column=1, sticky="ns", padx=10, pady=5)
+        ttk.Label(self.recommended_frame, text="Recommended Movies", font=("Helvetica", 12, "bold")).pack(pady=(0, 10))
+
+        self.recommended_listbox = tk.Listbox(self.recommended_frame, width=40, height=20)
+        self.recommended_listbox.pack(fill=tk.BOTH, expand=True)
+
+        # Predefined recommended movies (actual Movie objects)
+        self.recommended_movies = [
+            Movie("The Shawshank Redemption", 1994, "Drama", watched=True, rating=9.3),
+            Movie("The Godfather", 1972, "Crime", watched=True, rating=9.2),
+            Movie("The Dark Knight", 2008, "Action", watched=True, rating=9.0),
+        ]
+
+        for movie in self.recommended_movies:
+            display_text = f"{movie.title} ({movie.year}) - Rating: {movie.rating}"
+            self.recommended_listbox.insert(tk.END, display_text)
+
+        self.main_frame.columnconfigure(0, weight=3)
         self.main_frame.columnconfigure(1, weight=1)
 
-        # Initial display
         self.refresh_list()
 
     # ------------------------------ BUTTON HANDLERS ------------------------------
 
     def fetch_movie_details(self):
-        """Fetch details from OMDb for the given title and populate fields."""
         title = self.entry_title.get().strip()
         if not title:
             print("Please enter a movie title first.")
@@ -278,15 +276,10 @@ class MovieLogApp(tk.Tk):
         if response.status_code == 200:
             data = response.json()
             if data.get("Response") == "True":
-                # Extract the first 4 digits from the 'Year' (handles '2016–2025' etc.)
                 omdb_year = data.get("Year", "")
-                match = re.match(r"(\d{4})", omdb_year)  # look for a 4-digit year at start
-                if match:
-                    omdb_year = match.group(1)
-                else:
-                    omdb_year = ""
+                match = re.match(r"(\d{4})", omdb_year)
+                omdb_year = match.group(1) if match else ""
 
-                # Populate the fields
                 self.entry_title.delete(0, tk.END)
                 self.entry_title.insert(0, data.get("Title", ""))
 
@@ -304,21 +297,18 @@ class MovieLogApp(tk.Tk):
             print("HTTP Error:", response.status_code)
 
     def add_movie(self):
-        """Add a new movie to the library, ensuring year is a valid integer but no range limit."""
         title = self.entry_title.get().strip()
         year_str = self.entry_year.get().strip()
         genre = self.entry_genre.get().strip()
         rating_str = self.entry_rating.get().strip()
         watched = self.var_watched.get()
 
-        # Parse year safely using try/except
         try:
             year = int(year_str)
         except ValueError:
             print("Year must be a number.")
             return
 
-        # Conditionals for rating
         if rating_str == "":
             rating = None
         else:
@@ -335,7 +325,6 @@ class MovieLogApp(tk.Tk):
                 print("Rating must be <= 10.")
                 return
 
-        # Attempt to create and add the Movie
         try:
             movie = Movie(title, year, genre, watched, rating)
             self.library.add_movie(movie)
@@ -344,7 +333,6 @@ class MovieLogApp(tk.Tk):
             print("Error adding movie:", e)
             return
 
-        # Clear fields
         self.entry_title.delete(0, tk.END)
         self.entry_year.delete(0, tk.END)
         self.entry_genre.delete(0, tk.END)
@@ -354,7 +342,6 @@ class MovieLogApp(tk.Tk):
         self.refresh_list()
 
     def delete_selected_movie(self):
-        """Delete the selected row(s) from the Treeview and library."""
         selected_items = self.tree.selection()
         if not selected_items:
             print("No movie selected.")
@@ -370,49 +357,19 @@ class MovieLogApp(tk.Tk):
         self.refresh_list()
 
     def refresh_list(self):
-        """Refresh the Treeview from the MovieLibrary."""
-        # Clear existing rows
         for row in self.tree.get_children():
             self.tree.delete(row)
 
-        # Insert updated rows
         for m in self.library.get_all_movies():
             rating_str = "" if m.rating is None else str(m.rating)
             watched_str = "Yes" if m.watched else "No"
-            self.tree.insert(
-                "",
-                tk.END,
-                values=(m.title, m.year, m.genre, rating_str, watched_str)
-            )
+            self.tree.insert("", tk.END, values=(m.title, m.year, m.genre, rating_str, watched_str))
 
 
 # ------------------------------ MAIN ENTRY POINT ------------------------------
 
 if __name__ == "__main__":
-    # Create a movie library object
     my_library = MovieLibrary()
-    
-    # Load existing movies from CSV - these are our objects!
     my_library.load_from_csv("movies.csv")
-    
-    # Create the GUI application object
     app = MovieLogApp(api_key="9763440c")
-    
-    # Demonstrate object usage with our existing movies
-    print("\nCurrent Movie Library:")
-    for movie in my_library.get_all_movies():
-        print(f"\nMovie Object: {movie.title}")
-        print(f"Properties:")
-        print(f"- Title: {movie.title}")
-        print(f"- Year: {movie.year}")
-        print(f"- Genre: {movie.genre}")
-        print(f"- Watched: {movie.watched}")
-        print(f"- Rating: {movie.rating}")
-    
-    # Show unwatched movies (demonstrating object methods)
-    print("\nUnwatched Movies:")
-    for movie in my_library.get_unwatched_movies():
-        print(f"Need to watch: {movie.title}")
-    
-    # Run the GUI application
     app.mainloop()
